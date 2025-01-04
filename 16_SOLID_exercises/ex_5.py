@@ -11,55 +11,75 @@ class IEmail(ABC):
     def set_receiver(self, receiver):
         pass
 
-
-class IContent(ABC):
-
     @abstractmethod
     def set_content(self, content):
         pass
 
 
-class Email(IEmail, IContent):
+class IContent(ABC):
 
-    def __init__(self, protocol):
-        self.protocol = protocol
+    def __init__(self, text):
+        self.text = text
+
+    @abstractmethod
+    def set_content(self):
+        ...
+
+
+class MyContent(IContent):
+
+    def set_content(self):
+        return '\n'.join(['<myML>', self.text, '</myML>'])
+
+
+class ISender(ABC):
+
+    def __init__(self, text):
+        self.text = text
+
+    @abstractmethod
+    def set_person(self):
+        ...
+
+
+class IMperson(ISender):
+
+    def set_person(self):
+        return ''.join(["I'm ", self.text])
+
+
+class Email(IEmail):
+
+    def __init__(self):
         self.__sender = None
         self.__receiver = None
         self.__content = None
 
-    def set_sender(self, sender):
-        if self.protocol == "IM":
-            self.__sender = f"I am {sender}"
-        else:
-            self.__sender = sender
+    def set_sender(self, sender: IMperson):
+        self.__sender = sender.set_person()
 
-    def set_receiver(self, receiver):
-        if self.protocol == "IM":
-            self.__receiver = f"I am {receiver}"
-        else:
-            self.__receiver = receiver
+    def set_receiver(self, receiver: IMperson):
+        self.__receiver = receiver.set_person()
 
-    def set_content(self, content):
-        self.__content = content.set_content(content)
+    def set_content(self, content: IContent):
+        self.__content = content.set_content()
 
     def __repr__(self):
-        return f"Sender: {self.__sender}\n" \
-               f"Receiver: {self.__receiver}\n" \
-               f"Content:\n" \
-               f"{self.__content}"
+
+        template = "Sender: {sender}\nReceiver: {receiver}\nContent:\n{content}"
+
+        return template.format(sender=self.__sender, receiver=self.__receiver, content=self.__content)
 
 
-class MyContent(IContent):
-    def __init__(self, content):
-        self.content = content
+email = Email()
+sender = IMperson("Jamal")
+receiver = IMperson("Ivan")
 
-    def set_content(self, content):
-        return f"<MyML>{self.content}</MyML>"
+email.set_sender(sender)
+email.set_receiver(receiver)
 
+content = MyContent('Hello, there!')
 
-email = Email("IM")
-email.set_sender("qmal")
-email.set_receiver("james")
-content = MyContent("Hello, there!")
 email.set_content(content)
+
 print(email)
